@@ -99,6 +99,11 @@ pub enum ProxyScheme {
         auth: Option<(String, String)>,
         remote_dns: bool,
     },
+    #[cfg(feature = "socks")]
+    Socks4 {
+        addr: SocketAddr,
+        ident: Option<String>,
+    },
 }
 
 /// Trait used for converting into a proxy scheme. This trait supports
@@ -495,6 +500,16 @@ impl ProxyScheme {
         })
     }
 
+    /// Proxy traffic via the specified socket address over SOCKS4
+    ///
+    /// # Note
+    ///
+    /// SOCKS4 only support Ipv4.
+    #[cfg(feature = "socks")]
+    fn socks4(addr: SocketAddr) -> crate::Result<Self> {
+        Ok(ProxyScheme::Socks4 { addr, ident: None })
+    }
+
     /// Use a username and password when connecting to the proxy server
     fn with_basic_auth<T: Into<String>, U: Into<String>>(
         mut self,
@@ -519,6 +534,10 @@ impl ProxyScheme {
             ProxyScheme::Socks5 { ref mut auth, .. } => {
                 *auth = Some((username.into(), password.into()));
             }
+            #[cfg(feature = "socks")]
+            ProxyScheme::Socks4 { ref mut ident, .. } => {
+                *ident = Some(username.into());
+            }
         }
     }
 
@@ -536,6 +555,8 @@ impl ProxyScheme {
             }
             #[cfg(feature = "socks")]
             ProxyScheme::Socks5 { .. } => {}
+            #[cfg(feature = "socks")]
+            ProxyScheme::Socks4 { .. } => {}
         }
 
         self
@@ -553,7 +574,7 @@ impl ProxyScheme {
         let to_addr = || {
             let addrs = url
                 .socket_addrs(|| match url.scheme() {
-                    "socks5" | "socks5h" => Some(1080),
+                    "socks5" | "socks5h" | "socks4" => Some(1080),
                     _ => None,
                 })
                 .map_err(crate::error::builder)?;
@@ -570,6 +591,8 @@ impl ProxyScheme {
             "socks5" => Self::socks5(to_addr()?)?,
             #[cfg(feature = "socks")]
             "socks5h" => Self::socks5h(to_addr()?)?,
+            #[cfg(feature = "socks")]
+            "socks4" => Self::socks4(to_addr()?)?,
             _ => return Err(crate::error::builder("unknown proxy scheme")),
         };
 
@@ -589,6 +612,8 @@ impl ProxyScheme {
             ProxyScheme::Https { .. } => "https",
             #[cfg(feature = "socks")]
             ProxyScheme::Socks5 { .. } => "socks5",
+            #[cfg(feature = "socks")]
+            ProxyScheme::Socks4 { .. } => "socks4",
         }
     }
 
@@ -599,6 +624,8 @@ impl ProxyScheme {
             ProxyScheme::Https { host, .. } => host.as_str(),
             #[cfg(feature = "socks")]
             ProxyScheme::Socks5 { .. } => panic!("socks5"),
+            #[cfg(feature = "socks")]
+            ProxyScheme::Socks4 { .. } => panic!("socks4"),
         }
     }
 }
@@ -616,6 +643,13 @@ impl fmt::Debug for ProxyScheme {
             } => {
                 let h = if *remote_dns { "h" } else { "" };
                 write!(f, "socks5{}://{}", h, addr)
+            }
+            #[cfg(feature = "socks")]
+            ProxyScheme::Socks4 {
+                addr,
+                ident: _ident,
+            } => {
+                write!(f, "socks4://{}", addr)
             }
         }
     }

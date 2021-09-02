@@ -128,7 +128,7 @@ async-compression = { version = "0.3.7", default-features = false, features = ["
 tokio-util = { version = "0.6.0", default-features = false, features = ["codec", "io"], optional = true }
 
 ## socks
-tokio-socks = { version = "0.5.1", optional = true }
+tokio-socks = { git = "https://github.com/qyihua/tokio-socks", branch = "socks4", version = "0.5.1", optional = true }
 
 ## trust-dns
 trust-dns-resolver = { version = "0.20", optional = true }
