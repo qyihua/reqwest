@@ -37,11 +37,13 @@ enum Cert {
 }
 
 /// Represents a private key and X509 cert as a client certificate.
+#[derive(Clone)]
 pub struct Identity {
     #[cfg_attr(not(any(feature = "native-tls", feature = "__rustls")), allow(unused))]
     inner: ClientCert,
 }
 
+#[derive(Clone)]
 enum ClientCert {
     #[cfg(feature = "native-tls")]
     Pkcs12(native_tls_crate::Identity),
@@ -182,6 +184,8 @@ impl Identity {
     ///
     /// The input should contain a PEM encoded private key
     /// and at least one PEM encoded certificate.
+    ///
+    /// Note: The private key must be in RSA or PKCS#8 format.
     ///
     /// # Examples
     ///
