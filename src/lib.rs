@@ -2,7 +2,7 @@
 #![deny(missing_debug_implementations)]
 #![cfg_attr(docsrs, feature(doc_cfg))]
 #![cfg_attr(test, deny(warnings))]
-#![doc(html_root_url = "https://docs.rs/reqwest/0.11.5")]
+#![doc(html_root_url = "https://docs.rs/reqwest/0.11.6")]
 
 //! # reqwest
 //!
@@ -53,7 +53,7 @@
 //! There are several ways you can set the body of a request. The basic one is
 //! by using the `body()` method of a [`RequestBuilder`][builder]. This lets you set the
 //! exact raw bytes of what the body should be. It accepts various types,
-//! including `String`, `Vec<u8>`, and `File`. If you wish to pass a custom
+//! including `String` and `Vec<u8>`. If you wish to pass a custom
 //! type, you can use the `reqwest::Body` constructors.
 //!
 //! ```rust
